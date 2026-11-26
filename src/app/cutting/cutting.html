@@ -1,0 +1,110 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Cutting</h1>
+      <p>Pemotongan bahan menjadi panel per order — stok bahan berkurang, stok panel bertambah.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ Cutting Baru' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    @if (showForm()) {
+      <section class="panel cutting-form-panel">
+        <h2>Cutting Baru</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            Tanggal
+            <input type="date" [value]="fTanggal()" (change)="fTanggal.set($any($event.target).value)" />
+          </label>
+          <label>
+            Order
+            <select [value]="fOrderId()" (change)="fOrderId.set($any($event.target).value)">
+              <option value="">Pilih order…</option>
+              @for (o of orders(); track o.id) {
+                <option [value]="o.id">{{ o.no_order }} — {{ o.styles?.kode }} {{ o.styles?.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Bahan
+            <select [value]="fMaterialId()" (change)="fMaterialId.set($any($event.target).value)">
+              <option value="">Pilih bahan…</option>
+              @for (m of materials(); track m.id) {
+                <option [value]="m.id">{{ m.kode }} — {{ m.nama }} ({{ m.satuan }})</option>
+              }
+            </select>
+          </label>
+          <label>
+            Bahan Terpakai {{ selectedMaterial() ? '(' + selectedMaterial()!.satuan + ')' : '' }}
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fTerpakai()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fTerpakai.set($any($event.target).value)" />
+          </label>
+          <label>
+            Hasil Panel (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fHasil()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fHasil.set($any($event.target).value)" />
+          </label>
+          <label>
+            Sisa Bahan Kembali {{ selectedMaterial() ? '(' + selectedMaterial()!.satuan + ')' : '' }}
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fSisa()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fSisa.set($any($event.target).value)" />
+          </label>
+          <label>
+            Rincian (ukuran/warna)
+            <input type="text" placeholder="cth: L: 50" [value]="fRincian()" (input)="fRincian.set($any($event.target).value)" />
+          </label>
+          <label>
+            Catatan
+            <input type="text" placeholder="opsional" [value]="fCatatan()" (input)="fCatatan.set($any($event.target).value)" />
+          </label>
+          @if (availableStock() !== null) {
+            <p class="hint">Stok tersedia: {{ formatNum(availableStock()) }} {{ selectedMaterial()?.satuan }}</p>
+          }
+          <button type="button" class="btn-primary" (click)="addCutting()" [disabled]="!fOrderId() || !fMaterialId() || !fTerpakai().trim() || !fHasil().trim() || saving()">
+            Simpan Cutting
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      @if (batches().length === 0) {
+        <p class="muted">Belum ada cutting. Catat cutting pertama lewat tombol "+ Cutting Baru".</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Order</th>
+                <th>Bahan</th>
+                <th>Terpakai</th>
+                <th>Hasil Panel</th>
+                <th>Sisa Kembali</th>
+                <th>Rincian</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of batches(); track b.id) {
+                <tr>
+                  <td>{{ formatDate(b.tanggal) }}</td>
+                  <td>{{ b.orders?.no_order }} — {{ b.orders?.styles?.kode }}</td>
+                  <td>{{ b.materials?.kode }} {{ b.materials?.nama }}</td>
+                  <td>{{ formatNum(b.qty_bahan_terpakai) }} {{ b.materials?.satuan }}</td>
+                  <td>{{ formatNum(b.qty_hasil) }} pcs</td>
+                  <td>{{ formatNum(b.sisa_bahan) }} {{ b.materials?.satuan }}</td>
+                  <td>{{ b.rincian ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

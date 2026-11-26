@@ -34,10 +34,10 @@
       </button>
       <div class="group" [class.open]="opsOpen()">
         <div class="group-inner">
-          <span class="nav-item soon"><span class="dot"></span> Order &amp; Style</span>
-          <span class="nav-item soon"><span class="dot"></span> Barang Masuk</span>
-          <span class="nav-item soon"><span class="dot"></span> Gudang Bahan</span>
-          <span class="nav-item soon"><span class="dot"></span> Cutting</span>
+          <a class="nav-item" routerLink="/operasional/order" routerLinkActive="active" (click)="closeSidebar()"><span class="dot"></span> Order &amp; Style</a>
+          <a class="nav-item" routerLink="/operasional/barang-masuk" routerLinkActive="active" (click)="closeSidebar()"><span class="dot"></span> Barang Masuk</a>
+          <a class="nav-item" routerLink="/operasional/gudang-bahan" routerLinkActive="active" (click)="closeSidebar()"><span class="dot"></span> Gudang Bahan</a>
+          <a class="nav-item" routerLink="/operasional/cutting" routerLinkActive="active" (click)="closeSidebar()"><span class="dot"></span> Cutting</a>
           <span class="nav-item soon"><span class="dot"></span> Produksi</span>
           <span class="nav-item soon"><span class="dot"></span> Finishing &amp; QC</span>
           <span class="nav-item soon"><span class="dot"></span> Gudang FG</span>

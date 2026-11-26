@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { supabase } from '../supabase';
 import { Loader } from '../loader/loader';
+import { animate } from 'animejs';
 
 interface Style {
   id: string;
@@ -51,22 +52,22 @@ export class StyleBom implements OnInit {
   saving = signal(false);
 
   showStyleForm = signal(false);
-savingStyle = signal(false);
-fStyleKode = signal('');
-fStyleNama = signal('');
-fStyleKategori = signal('');
-fStyleUkuran = signal('');
-fStyleTarget = signal('');
+  savingStyle = signal(false);
+  fStyleKode = signal('');
+  fStyleNama = signal('');
+  fStyleKategori = signal('');
+  fStyleUkuran = signal('');
+  fStyleTarget = signal('');
 
-showMaterialForm = signal(false);
-savingMaterial = signal(false);
-fMatKode = signal('');
-fMatNama = signal('');
-fMatJenis = signal('Kain');
-fMatWarna = signal('');
-fMatSatuan = signal('meter');
-fMatKlasifikasi = signal('Bahan Baku');
-fMatSupplier = signal('');
+  showMaterialForm = signal(false);
+  savingMaterial = signal(false);
+  fMatKode = signal('');
+  fMatNama = signal('');
+  fMatJenis = signal('Kain');
+  fMatWarna = signal('');
+  fMatSatuan = signal('meter');
+  fMatKlasifikasi = signal('Bahan Baku');
+  fMatSupplier = signal('');
 
   selectedStyle = computed(
     () => this.styles().find((s) => s.id === this.selectedStyleId()) ?? null
@@ -84,13 +85,13 @@ fMatSupplier = signal('');
   });
 
   nextMaterialKode = computed(() => {
-  const nums = this.materials()
-    .map((m) => /^BHN-(\d+)$/.exec(m.kode)?.[1])
-    .filter((n): n is string => !!n)
-    .map(Number);
-  const next = (nums.length ? Math.max(...nums) : 0) + 1;
-  return 'BHN-' + String(next).padStart(3, '0');
-});
+    const nums = this.materials()
+      .map((m) => /^BHN-(\d+)$/.exec(m.kode)?.[1])
+      .filter((n): n is string => !!n)
+      .map(Number);
+    const next = (nums.length ? Math.max(...nums) : 0) + 1;
+    return 'BHN-' + String(next).padStart(3, '0');
+  });
 
   async ngOnInit() {
     const [stylesRes, materialsRes, bomRes] = await Promise.all([
@@ -121,6 +122,53 @@ fMatSupplier = signal('');
     this.selectedStyleId.set(id);
     this.newMaterialId.set('');
     this.newKebutuhan.set('');
+    requestAnimationFrame(() => {
+      if (document.querySelector('.bom-panel')) {
+        animate('.bom-panel', { opacity: [0.4, 1], y: [6, 0], duration: 300, ease: 'outQuad' });
+      }
+    });
+  }
+
+  toggleStyleForm() {
+    const open = !this.showStyleForm();
+    this.showStyleForm.set(open);
+    if (open) requestAnimationFrame(() => this.animateFormIn('.style-form'));
+  }
+
+  animateFormIn(selector: string) {
+    if (!document.querySelector(selector)) return;
+    animate(selector, {
+      opacity: [0, 1],
+      y: [-12, 0],
+      duration: 380,
+      ease: 'outQuad',
+    });
+  }
+
+  animateFormOut(selector: string, done: () => void) {
+    if (!document.querySelector(selector)) {
+      done();
+      return;
+    }
+    animate(selector, {
+      opacity: [1, 0],
+      y: [0, -8],
+      duration: 220,
+      ease: 'inQuad',
+    });
+    setTimeout(done, 220);
+  }
+
+  highlight(el: Element | null) {
+    if (!el) return;
+    animate(el, {
+      opacity: [0, 1],
+      y: [10, 0],
+      backgroundColor: ['rgba(59, 130, 246, 0.35)', 'rgba(59, 130, 246, 0)'],
+      duration: 700,
+      ease: 'outQuad',
+    });
+    setTimeout(() => (el as HTMLElement).style.removeProperty('background-color'), 720);
   }
 
   formatNum(n: number | null): string {
@@ -186,81 +234,91 @@ fMatSupplier = signal('');
   }
 
   async addStyle() {
-  const kode = this.fStyleKode().trim();
-  const nama = this.fStyleNama().trim();
-  if (!kode || !nama) return;
-  this.savingStyle.set(true);
-  const { data, error } = await supabase
-    .from('styles')
-    .insert({
-      kode,
-      nama,
-      kategori: this.fStyleKategori().trim() || null,
-      ukuran: this.fStyleUkuran().trim() || null,
-      target_qty: this.parseNum(this.fStyleTarget()),
-    })
-    .select('*')
-    .single();
-  this.savingStyle.set(false);
-  if (error) {
-    this.errorMsg.set('Gagal menambah style: ' + error.message);
-    return;
+    const kode = this.fStyleKode().trim();
+    const nama = this.fStyleNama().trim();
+    if (!kode || !nama) return;
+    this.savingStyle.set(true);
+    const { data, error } = await supabase
+      .from('styles')
+      .insert({
+        kode,
+        nama,
+        kategori: this.fStyleKategori().trim() || null,
+        ukuran: this.fStyleUkuran().trim() || null,
+        target_qty: this.parseNum(this.fStyleTarget()),
+      })
+      .select('*')
+      .single();
+    this.savingStyle.set(false);
+    if (error) {
+      this.errorMsg.set('Gagal menambah style: ' + error.message);
+      return;
+    }
+    this.errorMsg.set('');
+    const newStyle = data as Style;
+    this.styles.update((list) =>
+      [...list, newStyle].sort((a, b) => a.kode.localeCompare(b.kode))
+    );
+    this.selectStyle(newStyle.id);
+    this.fStyleKode.set('');
+    this.fStyleNama.set('');
+    this.fStyleKategori.set('');
+    this.fStyleUkuran.set('');
+    this.fStyleTarget.set('');
+    this.animateFormOut('.style-form', () => {
+      this.showStyleForm.set(false);
+      requestAnimationFrame(() => {
+        const cards = document.querySelectorAll('.style-card');
+        const idx = this.styles().findIndex((s) => s.id === newStyle.id);
+        this.highlight(cards[idx] ?? null);
+      });
+    });
   }
-  this.errorMsg.set('');
-  const newStyle = data as Style;
-  this.styles.update((list) =>
-    [...list, newStyle].sort((a, b) => a.kode.localeCompare(b.kode))
-  );
-  this.selectStyle(newStyle.id);
-  this.fStyleKode.set('');
-  this.fStyleNama.set('');
-  this.fStyleKategori.set('');
-  this.fStyleUkuran.set('');
-  this.fStyleTarget.set('');
-  this.showStyleForm.set(false);
-}
 
   toggleMaterialForm() {
-  const open = !this.showMaterialForm();
-  this.showMaterialForm.set(open);
-  if (open) this.fMatKode.set(this.nextMaterialKode());
-}
-
-async addMaterial() {
-  const kode = this.fMatKode().trim();
-  const nama = this.fMatNama().trim();
-  if (!kode || !nama) return;
-  this.savingMaterial.set(true);
-  const { data, error } = await supabase
-    .from('materials')
-    .insert({
-      kode,
-      nama,
-      jenis: this.fMatJenis() || null,
-      warna: this.fMatWarna().trim() || null,
-      satuan: this.fMatSatuan(),
-      klasifikasi: this.fMatKlasifikasi() || null,
-      supplier: this.fMatSupplier().trim() || null,
-    })
-    .select('*')
-    .single();
-  this.savingMaterial.set(false);
-  if (error) {
-    this.errorMsg.set('Gagal menambah bahan: ' + error.message);
-    return;
+    const open = !this.showMaterialForm();
+    this.showMaterialForm.set(open);
+    if (open) {
+      this.fMatKode.set(this.nextMaterialKode());
+      requestAnimationFrame(() => this.animateFormIn('.material-form'));
+    }
   }
-  this.errorMsg.set('');
-  const newMat = data as Material;
-  this.materials.update((list) =>
-    [...list, newMat].sort((a, b) => a.kode.localeCompare(b.kode))
-  );
-  this.newMaterialId.set(newMat.id);
-  this.fMatNama.set('');
-  this.fMatWarna.set('');
-  this.fMatSupplier.set('');
-  this.fMatKode.set(this.nextMaterialKode());
-  this.showMaterialForm.set(false);
-}
+
+  async addMaterial() {
+    const kode = this.fMatKode().trim();
+    const nama = this.fMatNama().trim();
+    if (!kode || !nama) return;
+    this.savingMaterial.set(true);
+    const { data, error } = await supabase
+      .from('materials')
+      .insert({
+        kode,
+        nama,
+        jenis: this.fMatJenis() || null,
+        warna: this.fMatWarna().trim() || null,
+        satuan: this.fMatSatuan(),
+        klasifikasi: this.fMatKlasifikasi() || null,
+        supplier: this.fMatSupplier().trim() || null,
+      })
+      .select('*')
+      .single();
+    this.savingMaterial.set(false);
+    if (error) {
+      this.errorMsg.set('Gagal menambah bahan: ' + error.message);
+      return;
+    }
+    this.errorMsg.set('');
+    const newMat = data as Material;
+    this.materials.update((list) =>
+      [...list, newMat].sort((a, b) => a.kode.localeCompare(b.kode))
+    );
+    this.newMaterialId.set(newMat.id);
+    this.fMatNama.set('');
+    this.fMatWarna.set('');
+    this.fMatSupplier.set('');
+    this.fMatKode.set(this.nextMaterialKode());
+    this.animateFormOut('.material-form', () => this.showMaterialForm.set(false));
+  }
 
   async addBomItem() {
     const styleId = this.selectedStyleId();
@@ -285,6 +343,11 @@ async addMaterial() {
     this.bomItems.update((list) => [...list, data as BomItem]);
     this.newMaterialId.set('');
     this.newKebutuhan.set('');
+    requestAnimationFrame(() => {
+      const idx = this.selectedBom().findIndex((b) => b.id === (data as BomItem).id);
+      const rows = document.querySelectorAll('tbody tr');
+      this.highlight(rows[idx] ?? null);
+    });
   }
 
   async removeBomItem(item: BomItem) {

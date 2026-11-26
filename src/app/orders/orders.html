@@ -1,0 +1,103 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Order &amp; Style</h1>
+      <p>Order buyer yang menjadi jangkar seluruh alur produksi.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ Order Baru' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    @if (showForm()) {
+  <section class="panel order-form-panel">
+        <h2>Order Baru</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            No Order
+            <input type="text" placeholder="cth: ORD-001" [value]="fNoOrder()" (input)="fNoOrder.set($any($event.target).value)" />
+          </label>
+          <label>
+            Buyer
+            <select [value]="fBuyerId()" (change)="fBuyerId.set($any($event.target).value)">
+              <option value="">Pilih buyer…</option>
+              @for (b of buyers(); track b.id) {
+                <option [value]="b.id">{{ b.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Style
+            <select [value]="fStyleId()" (change)="fStyleId.set($any($event.target).value)">
+              <option value="">Pilih style…</option>
+              @for (s of styles(); track s.id) {
+                <option [value]="s.id">{{ s.kode }} — {{ s.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Qty Order (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fQty()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fQty.set($any($event.target).value)" />
+          </label>
+          <label>
+            Rincian Size / Warna
+            <input type="text" placeholder="cth: S:100, M:200, L:200 / Hitam" [value]="fRincian()" (input)="fRincian.set($any($event.target).value)" />
+          </label>
+          <label>
+            Target Selesai
+            <input type="date" [value]="fTarget()" (change)="fTarget.set($any($event.target).value)" />
+          </label>
+          <label>
+            Catatan
+            <input type="text" placeholder="opsional" [value]="fCatatan()" (input)="fCatatan.set($any($event.target).value)" />
+          </label>
+          <button type="button" class="btn-primary" (click)="addOrder()" [disabled]="!fNoOrder().trim() || !fStyleId() || !fQty().trim() || saving()">
+            Simpan Order
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      @if (orders().length === 0) {
+        <p class="muted">Belum ada order. Buat order pertama lewat tombol "+ Order Baru".</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No Order</th>
+                <th>Buyer</th>
+                <th>Style</th>
+                <th>Qty</th>
+                <th>Rincian</th>
+                <th>Target Selesai</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of orders(); track o.id) {
+                <tr>
+                  <td class="kode-cell">{{ o.no_order }}</td>
+                  <td>{{ o.buyers?.nama ?? '-' }}</td>
+                  <td>{{ o.styles?.kode }} {{ o.styles?.nama }}</td>
+                  <td>{{ formatNum(o.qty_order) }} pcs</td>
+                  <td>{{ o.rincian ?? '-' }}</td>
+                  <td>{{ formatDate(o.target_selesai) }}</td>
+                  <td><span class="badge">{{ o.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

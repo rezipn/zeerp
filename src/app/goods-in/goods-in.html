@@ -1,0 +1,105 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Barang Masuk</h1>
+      <p>Penerimaan bahan dari supplier — stok Gudang Bahan bertambah otomatis.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ Barang Masuk' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    @if (showForm()) {
+      <section class="panel receipt-form-panel">
+        <h2>Penerimaan Baru</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            Tanggal
+            <input type="date" [value]="fTanggal()" (change)="fTanggal.set($any($event.target).value)" />
+          </label>
+          <label>
+            Supplier
+            <select [value]="fSupplierId()" (change)="fSupplierId.set($any($event.target).value)">
+              <option value="">Pilih supplier…</option>
+              @for (s of suppliers(); track s.id) {
+                <option [value]="s.id">{{ s.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Supplier Baru (jika belum ada)
+            <input type="text" placeholder="Nama supplier baru" [value]="fSupplierBaru()" (input)="fSupplierBaru.set($any($event.target).value)" />
+          </label>
+          <label>
+            Bahan
+            <select [value]="fMaterialId()" (change)="fMaterialId.set($any($event.target).value)">
+              <option value="">Pilih bahan…</option>
+              @for (m of materials(); track m.id) {
+                <option [value]="m.id">{{ m.kode }} — {{ m.nama }} ({{ m.satuan }})</option>
+              }
+            </select>
+          </label>
+          <label>
+            Jumlah {{ selectedMaterial() ? '(' + selectedMaterial()!.satuan + ')' : '' }}
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fQty()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fQty.set($any($event.target).value)" />
+          </label>
+          <label>
+            No Lot
+            <input type="text" placeholder="cth: LOT-001" [value]="fNoLot()" (input)="fNoLot.set($any($event.target).value)" />
+          </label>
+          <label>
+            Ref Dokumen
+            <input type="text" placeholder="No surat jalan / PIB" [value]="fRefDokumen()" (input)="fRefDokumen.set($any($event.target).value)" />
+          </label>
+          <label>
+            Catatan
+            <input type="text" placeholder="opsional" [value]="fCatatan()" (input)="fCatatan.set($any($event.target).value)" />
+          </label>
+          <button type="button" class="btn-primary" (click)="addReceipt()" [disabled]="!fMaterialId() || !fQty().trim() || saving()">
+            Simpan Penerimaan
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      @if (receipts().length === 0) {
+        <p class="muted">Belum ada penerimaan. Catat penerimaan pertama lewat tombol "+ Barang Masuk".</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Supplier</th>
+                <th>Bahan</th>
+                <th>Jumlah</th>
+                <th>No Lot</th>
+                <th>Ref Dokumen</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of receipts(); track r.id) {
+                <tr>
+                  <td>{{ formatDate(r.tanggal) }}</td>
+                  <td>{{ r.suppliers?.nama ?? '-' }}</td>
+                  <td>{{ r.materials?.kode }} {{ r.materials?.nama }}</td>
+                  <td>{{ formatNum(r.qty) }} {{ r.satuan ?? r.materials?.satuan }}</td>
+                  <td>{{ r.no_lot ?? '-' }}</td>
+                  <td>{{ r.ref_dokumen ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

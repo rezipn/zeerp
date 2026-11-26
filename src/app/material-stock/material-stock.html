@@ -1,0 +1,97 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Gudang Bahan</h1>
+      <p>Stok bahan dari ledger mutasi — klik bahan untuk melihat kartu stoknya.</p>
+    </div>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    <section class="panel">
+      @if (stockRows().length === 0) {
+        <p class="muted">Belum ada bahan. Tambahkan lewat Master Data → Style &amp; BOM.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kode</th>
+                <th>Nama Bahan</th>
+                <th>Satuan</th>
+                <th>Stok</th>
+                <th>Stok Minimum</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of stockRows(); track row.id) {
+                <tr
+                  class="stock-row"
+                  [class.selected]="row.id === selectedMaterialId()"
+                  (click)="selectMaterial(row.id)"
+                >
+                  <td class="kode-cell">{{ row.kode }}</td>
+                  <td>{{ row.nama }}</td>
+                  <td>{{ row.satuan }}</td>
+                  <td><strong>{{ formatNum(row.stok) }}</strong></td>
+                  <td>{{ formatNum(row.stok_minimum) }}</td>
+                  <td>
+                    @if (row.stok <= 0) {
+                      <span class="badge badge-out">Habis</span>
+                    } @else if (row.stok_minimum > 0 && row.stok <= row.stok_minimum) {
+                      <span class="badge badge-low">Stok Rendah</span>
+                    } @else {
+                      <span class="badge">Aman</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (selectedMaterial(); as mat) {
+      <section class="panel stock-card-panel">
+        <h2>Kartu Stok — {{ mat.kode }} {{ mat.nama }} ({{ mat.satuan }})</h2>
+        @if (cardRows().length === 0) {
+          <p class="muted">Belum ada mutasi untuk bahan ini.</p>
+        } @else {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Sumber</th>
+                  <th>Masuk</th>
+                  <th>Keluar</th>
+                  <th>Saldo</th>
+                  <th>Catatan</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of cardRows(); track m.id) {
+                  <tr>
+                    <td>{{ formatDate(m.tanggal) }}</td>
+                    <td>{{ sumberLabel(m.sumber_transaksi) }}</td>
+                    <td>{{ m.qty_masuk > 0 ? formatNum(m.qty_masuk) : '-' }}</td>
+                    <td>{{ m.qty_keluar > 0 ? formatNum(m.qty_keluar) : '-' }}</td>
+                    <td><strong>{{ formatNum(m.saldo) }}</strong></td>
+                    <td>{{ m.catatan ?? '-' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
