@@ -1,0 +1,128 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Produksi</h1>
+      <p>Hasil sewing per order — panel dan aksesoris terpotong otomatis, hasil masuk WIP.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ Produksi Baru' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    <section class="panel">
+      <h2>Stok Panel per Order</h2>
+      @if (panelRows().length === 0) {
+        <p class="muted">Belum ada panel. Panel muncul setelah cutting dicatat.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Style</th>
+                <th>Panel Tersedia</th>
+                <th>Status Order</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of panelRows(); track row.id) {
+                <tr class="stock-row" [class.selected]="row.id === fOrderId()" (click)="pickOrder(row.id)">
+                  <td class="kode-cell">{{ row.no_order }}</td>
+                  <td>{{ row.styles?.kode }} {{ row.styles?.nama }}</td>
+                  <td><strong>{{ formatNum(row.panel) }} pcs</strong></td>
+                  <td><span class="badge">{{ row.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Klik order untuk mengisi form produksi.</p>
+      }
+    </section>
+
+    @if (showForm()) {
+      <section class="panel production-form-panel">
+        <h2>Produksi Baru</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            Tanggal
+            <input type="date" [value]="fTanggal()" (change)="fTanggal.set($any($event.target).value)" />
+          </label>
+          <label>
+            Order
+            <select [value]="fOrderId()" (change)="fOrderId.set($any($event.target).value)">
+              <option value="">Pilih order…</option>
+              @for (o of orders(); track o.id) {
+                <option [value]="o.id">{{ o.no_order }} — {{ o.styles?.kode }} {{ o.styles?.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Qty Selesai (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fQty()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fQty.set($any($event.target).value)" />
+          </label>
+          <label>
+            Catatan
+            <input type="text" placeholder="opsional" [value]="fCatatan()" (input)="fCatatan.set($any($event.target).value)" />
+          </label>
+          @if (panelAvailable() !== null) {
+            <p class="hint">Panel tersedia untuk order ini: {{ formatNum(panelAvailable()) }} pcs</p>
+          }
+          @if (accessoryPreview().length > 0) {
+            <div class="preview-box">
+              <p class="preview-title">Aksesoris yang akan terpotong (dari BOM):</p>
+              @for (acc of accessoryPreview(); track acc.kode) {
+                <p class="preview-line">
+                  {{ acc.kode }} {{ acc.nama }} — {{ formatNum(acc.perPcs) }} {{ acc.satuan }}/pcs × qty = <strong>{{ formatNum(acc.total) }} {{ acc.satuan }}</strong>
+                  (stok: {{ formatNum(acc.stok) }})
+                  @if (acc.total > acc.stok) {
+                    <span class="warn">stok kurang!</span>
+                  }
+                </p>
+              }
+            </div>
+          }
+          <button type="button" class="btn-primary" (click)="addProduction()" [disabled]="!fOrderId() || !fQty().trim() || saving()">
+            Simpan Produksi
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      @if (batches().length === 0) {
+        <p class="muted">Belum ada produksi. Catat hasil sewing pertama lewat tombol "+ Produksi Baru".</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Order</th>
+                <th>Qty Selesai</th>
+                <th>Catatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of batches(); track b.id) {
+                <tr>
+                  <td>{{ formatDate(b.tanggal) }}</td>
+                  <td>{{ b.orders?.no_order }} — {{ b.orders?.styles?.kode }}</td>
+                  <td>{{ formatNum(b.qty_selesai) }} pcs</td>
+                  <td>{{ b.catatan ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

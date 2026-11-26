@@ -8,6 +8,10 @@ import { Orders } from './orders/orders';
 import { GoodsIn } from './goods-in/goods-in';
 import { MaterialStock } from './material-stock/material-stock';
 import { Cutting } from './cutting/cutting';
+import { Production } from './production/production';
+import { FinishingQc } from './finishing-qc/finishing-qc';
+import { FinishedGoods } from './finished-goods/finished-goods';
+import { Leftover } from './leftover/leftover';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -23,6 +27,10 @@ export const routes: Routes = [
       { path: 'operasional/barang-masuk', component: GoodsIn },
       { path: 'operasional/gudang-bahan', component: MaterialStock },
       { path: 'operasional/cutting', component: Cutting },
+      { path: 'operasional/produksi', component: Production },
+      { path: 'operasional/finishing-qc', component: FinishingQc },
+      { path: 'operasional/gudang-fg', component: FinishedGoods },
+      { path: 'operasional/barang-sisa', component: Leftover },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

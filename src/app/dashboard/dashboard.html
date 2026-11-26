@@ -1,4 +1,116 @@
 <div class="page">
-  <h1>Dashboard</h1>
-  <p>dashboard works!</p>
+  <header class="page-head">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Ringkasan operasional PT Jumpwin Sports Indonesia.</p>
+    </div>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <p class="kpi-label">Order Aktif</p>
+        <p class="kpi-value">{{ orderAktif() }}</p>
+        <p class="kpi-sub">belum selesai</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Bahan Tersedia</p>
+        <p class="kpi-value">{{ bahanTersedia() }}</p>
+        <p class="kpi-sub">jenis bahan berstok</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">WIP Berjalan</p>
+        <p class="kpi-value">{{ formatNum(wipTotal()) }}</p>
+        <p class="kpi-sub">pcs menunggu QC</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">FG Siap Kirim</p>
+        <p class="kpi-value">{{ formatNum(fgSiapKirim()) }}</p>
+        <p class="kpi-sub">pcs di Gudang FG</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Order Selesai</p>
+        <p class="kpi-value">{{ orderSelesai() }}</p>
+        <p class="kpi-sub">sudah terkirim penuh</p>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <section class="panel chart-panel">
+        <h2>Order per Status</h2>
+        <div id="chart-status" class="chart-box"></div>
+      </section>
+      <section class="panel chart-panel">
+        <h2>Stok Bahan Teratas</h2>
+        <div id="chart-stok" class="chart-box"></div>
+      </section>
+      <section class="panel chart-panel chart-wide">
+        <h2>Aktivitas Mutasi 7 Hari Terakhir</h2>
+        <div id="chart-mutasi" class="chart-box"></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Progres per Order</h2>
+      @if (progressRows().length === 0) {
+        <p class="muted">Tidak ada order aktif.</p>
+      } @else {
+        @for (row of progressRows(); track row.id) {
+          <div class="progress-row">
+            <div class="progress-head">
+              <span class="progress-title"
+                >{{ row.no_order }} — {{ row.styles?.kode }} {{ row.styles?.nama }}</span
+              >
+              <span class="badge">{{ row.status }}</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="row.persen"></div>
+            </div>
+            <p class="progress-meta">
+              Panel {{ formatNum(row.panel) }} · Produksi {{ formatNum(row.produksi) }} · FG
+              {{ formatNum(row.fg) }} · Terkirim {{ formatNum(row.terkirim) }} dari
+              {{ formatNum(row.qty_order) }} pcs ({{ row.persen }}%)
+              @if (row.target_selesai) {
+                · Target {{ formatDate(row.target_selesai) }}
+              }
+            </p>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="panel">
+      <h2>Mutasi Stok Terakhir</h2>
+      @if (recentMovements().length === 0) {
+        <p class="muted">Belum ada mutasi stok.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Mutasi</th>
+                <th>Sumber</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of recentMovements(); track m.id) {
+                <tr>
+                  <td>{{ formatDate(m.tanggal) }}</td>
+                  <td>{{ movementLabel(m) }}</td>
+                  <td>{{ m.sumber_transaksi ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
 </div>

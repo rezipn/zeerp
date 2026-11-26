@@ -1,0 +1,130 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Gudang FG</h1>
+      <p>Stok finish good siap kirim per order — pengiriman mengurangi stok FG.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ Pengiriman Baru' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    <section class="panel">
+      <h2>Stok Finish Good per Order</h2>
+      @if (fgRows().length === 0) {
+        <p class="muted">Belum ada finish good. FG muncul setelah QC lulus dicatat.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Style</th>
+                <th>Buyer</th>
+                <th>FG Tersedia</th>
+                <th>Terkirim</th>
+                <th>Qty Order</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of fgRows(); track row.id) {
+                <tr class="stock-row" [class.selected]="row.id === fOrderId()" (click)="pickOrder(row.id)">
+                  <td class="kode-cell">{{ row.no_order }}</td>
+                  <td>{{ row.styles?.kode }} {{ row.styles?.nama }}</td>
+                  <td>{{ row.buyers?.nama ?? '-' }}</td>
+                  <td><strong>{{ formatNum(row.fg) }} pcs</strong></td>
+                  <td>{{ formatNum(row.terkirim) }} pcs</td>
+                  <td>{{ formatNum(row.qty_order) }} pcs</td>
+                  <td><span class="badge">{{ row.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Klik order untuk mengisi form pengiriman.</p>
+      }
+    </section>
+
+    @if (showForm()) {
+      <section class="panel shipment-form-panel">
+        <h2>Pengiriman Baru</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            Tanggal
+            <input type="date" [value]="fTanggal()" (change)="fTanggal.set($any($event.target).value)" />
+          </label>
+          <label>
+            Order
+            <select [value]="fOrderId()" (change)="fOrderId.set($any($event.target).value)">
+              <option value="">Pilih order…</option>
+              @for (o of orders(); track o.id) {
+                <option [value]="o.id">{{ o.no_order }} — {{ o.styles?.kode }} {{ o.styles?.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Qty Kirim (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fQty()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fQty.set($any($event.target).value)" />
+          </label>
+          <label>
+            Tujuan
+            <input type="text" placeholder="cth: nama buyer / gudang tujuan" [value]="fTujuan()" (input)="fTujuan.set($any($event.target).value)" />
+          </label>
+          <label>
+            Ref Dokumen
+            <input type="text" placeholder="No surat jalan / packing list" [value]="fRefDokumen()" (input)="fRefDokumen.set($any($event.target).value)" />
+          </label>
+          <label>
+            Catatan
+            <input type="text" placeholder="opsional" [value]="fCatatan()" (input)="fCatatan.set($any($event.target).value)" />
+          </label>
+          @if (fgAvailable() !== null) {
+            <p class="hint">FG tersedia untuk order ini: {{ formatNum(fgAvailable()) }} pcs</p>
+          }
+          <button type="button" class="btn-primary" (click)="addShipment()" [disabled]="!fOrderId() || !fQty().trim() || saving()">
+            Simpan Pengiriman
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      @if (shipments().length === 0) {
+        <p class="muted">Belum ada pengiriman. Catat pengiriman pertama lewat tombol "+ Pengiriman Baru".</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Order</th>
+                <th>Qty Kirim</th>
+                <th>Tujuan</th>
+                <th>Ref Dokumen</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of shipments(); track s.id) {
+                <tr>
+                  <td>{{ formatDate(s.tanggal) }}</td>
+                  <td>{{ s.orders?.no_order }} — {{ s.orders?.styles?.kode }}</td>
+                  <td>{{ formatNum(s.qty_kirim) }} pcs</td>
+                  <td>{{ s.tujuan ?? '-' }}</td>
+                  <td>{{ s.ref_dokumen ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

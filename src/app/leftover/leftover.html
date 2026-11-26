@@ -1,0 +1,153 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Barang Sisa</h1>
+      <p>
+        Stok barang reject dari QC per order — bisa dikeluarkan untuk dijual, dipakai ulang, atau
+        dibuang.
+      </p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ Keluarkan Sisa' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    <section class="panel">
+      <h2>Stok Barang Sisa per Order</h2>
+      @if (sisaRows().length === 0) {
+        <p class="muted">Belum ada barang sisa. Sisa muncul dari reject pada QC.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Style</th>
+                <th>Sisa Tersedia</th>
+                <th>Status Order</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of sisaRows(); track row.id) {
+                <tr
+                  class="stock-row"
+                  [class.selected]="row.id === fOrderId()"
+                  (click)="pickOrder(row.id)"
+                >
+                  <td class="kode-cell">{{ row.no_order }}</td>
+                  <td>{{ row.styles?.kode }} {{ row.styles?.nama }}</td>
+                  <td>
+                    <strong>{{ formatNum(row.sisa) }} pcs</strong>
+                  </td>
+                  <td>
+                    <span class="badge">{{ row.status }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Klik order untuk mengisi form pengeluaran.</p>
+      }
+    </section>
+
+    @if (showForm()) {
+      <section class="panel sisa-form-panel">
+        <h2>Keluarkan Barang Sisa</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            Tanggal
+            <input
+              type="date"
+              [value]="fTanggal()"
+              (change)="fTanggal.set($any($event.target).value)"
+            />
+          </label>
+          <label>
+            Order
+            <select [value]="fOrderId()" (change)="fOrderId.set($any($event.target).value)">
+              <option value="">Pilih order…</option>
+              @for (o of orders(); track o.id) {
+                <option [value]="o.id">
+                  {{ o.no_order }} — {{ o.styles?.kode }} {{ o.styles?.nama }}
+                </option>
+              }
+            </select>
+          </label>
+          <label>
+            Qty Keluar (pcs)
+            <input
+              type="text"
+              inputmode="decimal"
+              placeholder="0"
+              [value]="fQty()"
+              (focus)="$any($event.target).select()"
+              (input)="onQtyInput($event); fQty.set($any($event.target).value)"
+            />
+          </label>
+          <label>
+            Keterangan
+            <input
+              type="text"
+              placeholder="cth: dijual / dipakai ulang / dibuang"
+              [value]="fKeterangan()"
+              (input)="fKeterangan.set($any($event.target).value)"
+            />
+          </label>
+          @if (sisaAvailable() !== null) {
+            <p class="hint">Sisa tersedia untuk order ini: {{ formatNum(sisaAvailable()) }} pcs</p>
+          }
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="addOut()"
+            [disabled]="!fOrderId() || !fQty().trim() || saving()"
+          >
+            Simpan Pengeluaran
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      <h2>Riwayat Mutasi Barang Sisa</h2>
+      @if (movements().length === 0) {
+        <p class="muted">Belum ada mutasi barang sisa.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Order</th>
+                <th>Masuk</th>
+                <th>Keluar</th>
+                <th>Sumber</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of movements(); track m.id) {
+                <tr>
+                  <td>{{ formatDate(m.tanggal) }}</td>
+                  <td>{{ m.orders?.no_order }} — {{ m.orders?.styles?.kode }}</td>
+                  <td>{{ isPositive(m.qty_masuk) ? formatNum(m.qty_masuk) + ' pcs' : '-' }}</td>
+                  <td>{{ isPositive(m.qty_keluar) ? formatNum(m.qty_keluar) + ' pcs' : '-' }}</td>
+                  <td>{{ sumberLabel(m.sumber_transaksi) }}</td>
+                  <td>{{ m.catatan ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

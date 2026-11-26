@@ -1,0 +1,130 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Finishing &amp; QC</h1>
+      <p>Pemeriksaan hasil produksi — lulus masuk Gudang FG, reject masuk Barang Sisa, repair tetap di WIP.</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Tutup' : '+ QC Baru' }}
+    </button>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <app-loader />
+  } @else {
+    <section class="panel">
+      <h2>WIP Menunggu QC per Order</h2>
+      @if (wipRows().length === 0) {
+        <p class="muted">Belum ada WIP. WIP muncul setelah produksi dicatat.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Style</th>
+                <th>WIP Tersedia</th>
+                <th>Status Order</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of wipRows(); track row.id) {
+                <tr class="stock-row" [class.selected]="row.id === fOrderId()" (click)="pickOrder(row.id)">
+                  <td class="kode-cell">{{ row.no_order }}</td>
+                  <td>{{ row.styles?.kode }} {{ row.styles?.nama }}</td>
+                  <td><strong>{{ formatNum(row.wip) }} pcs</strong></td>
+                  <td><span class="badge">{{ row.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Klik order untuk mengisi form QC.</p>
+      }
+    </section>
+
+    @if (showForm()) {
+      <section class="panel qc-form-panel">
+        <h2>QC Baru</h2>
+        <div class="form-grid form-grid-2">
+          <label>
+            Tanggal
+            <input type="date" [value]="fTanggal()" (change)="fTanggal.set($any($event.target).value)" />
+          </label>
+          <label>
+            Order
+            <select [value]="fOrderId()" (change)="fOrderId.set($any($event.target).value)">
+              <option value="">Pilih order…</option>
+              @for (o of orders(); track o.id) {
+                <option [value]="o.id">{{ o.no_order }} — {{ o.styles?.kode }} {{ o.styles?.nama }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Qty Lulus (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fLulus()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fLulus.set($any($event.target).value)" />
+          </label>
+          <label>
+            Qty Reject (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fReject()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fReject.set($any($event.target).value)" />
+          </label>
+          <label>
+            Qty Repair (pcs)
+            <input type="text" inputmode="decimal" placeholder="0" [value]="fRepair()" (focus)="$any($event.target).select()" (input)="onQtyInput($event); fRepair.set($any($event.target).value)" />
+          </label>
+          <label>
+            Alasan Reject
+            <input type="text" placeholder="cth: jahitan miring" [value]="fAlasan()" (input)="fAlasan.set($any($event.target).value)" />
+          </label>
+          <label>
+            Catatan
+            <input type="text" placeholder="opsional" [value]="fCatatan()" (input)="fCatatan.set($any($event.target).value)" />
+          </label>
+          @if (wipAvailable() !== null) {
+            <p class="hint">WIP tersedia untuk order ini: {{ formatNum(wipAvailable()) }} pcs</p>
+          }
+          <button type="button" class="btn-primary" (click)="addQc()" [disabled]="!fOrderId() || saving()">
+            Simpan QC
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="panel">
+      @if (batches().length === 0) {
+        <p class="muted">Belum ada QC. Catat pemeriksaan pertama lewat tombol "+ QC Baru".</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Order</th>
+                <th>Lulus</th>
+                <th>Reject</th>
+                <th>Repair</th>
+                <th>Alasan Reject</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of batches(); track b.id) {
+                <tr>
+                  <td>{{ formatDate(b.tanggal) }}</td>
+                  <td>{{ b.orders?.no_order }} — {{ b.orders?.styles?.kode }}</td>
+                  <td>{{ formatNum(b.qty_lulus) }} pcs</td>
+                  <td>{{ formatNum(b.qty_reject) }} pcs</td>
+                  <td>{{ formatNum(b.qty_repair) }} pcs</td>
+                  <td>{{ b.alasan_reject ?? '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>
