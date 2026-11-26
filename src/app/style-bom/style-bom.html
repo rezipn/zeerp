@@ -1,0 +1,83 @@
+<div class="page">
+  <header class="page-head">
+    <div>
+      <h1>Style &amp; BOM</h1>
+      <p>Master style dan resep bahan per pcs.</p>
+    </div>
+  </header>
+
+  @if (errorMsg()) {
+    <div class="alert">{{ errorMsg() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="muted">Memuat data…</p>
+  } @else {
+    <div class="grid">
+      <section class="panel styles-panel">
+        <h2>Daftar Style</h2>
+        @for (style of styles(); track style.id) {
+          <button
+            type="button"
+            class="style-card"
+            [class.selected]="style.id === selectedStyleId()"
+            (click)="selectStyle(style.id)"
+          >
+            <span class="kode">{{ style.kode }}</span>
+            <span class="nama">{{ style.nama }}</span>
+            <span class="meta">
+              {{ style.kategori ?? '-' }} · {{ style.ukuran ?? '-' }} · Target {{ style.target_qty ?? '-' }} pcs
+            </span>
+          </button>
+        }
+      </section>
+
+      <section class="panel bom-panel">
+        @if (selectedStyle(); as style) {
+          <h2>BOM — {{ style.kode }} {{ style.nama }}</h2>
+          @if (selectedBom().length === 0) {
+            <p class="muted">Belum ada bahan di BOM style ini.</p>
+          } @else {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th>Nama Bahan</th>
+                    <th>Jenis</th>
+                    <th>Warna</th>
+                    <th>Satuan</th>
+                    <th>Kebutuhan / pcs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of selectedBom(); track item.id) {
+                    <tr>
+                      <td class="kode-cell">{{ item.materials.kode }}</td>
+                      <td>{{ item.materials.nama }}</td>
+                      <td>{{ item.materials.jenis ?? '-' }}</td>
+                      <td>{{ item.materials.warna ?? '-' }}</td>
+                      <td>{{ item.materials.satuan }}</td>
+                      <td>
+                        <input
+  type="text"
+  inputmode="decimal"
+  placeholder="0"
+  [value]="formatNum(item.kebutuhan_per_pcs)"
+  (focus)="$any($event.target).select()"
+  (input)="onKebutuhanInput($event)"
+  (change)="onKebutuhanChange(item, $event)"
+/>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="hint">Isi kebutuhan per pcs lalu tekan Enter / klik di luar kolom untuk menyimpan.</p>
+          }
+        }
+      </section>
+    </div>
+  }
+</div>
