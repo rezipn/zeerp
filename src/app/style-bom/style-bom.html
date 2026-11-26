@@ -11,7 +11,7 @@
   }
 
   @if (loading()) {
-    <p class="muted">Memuat data…</p>
+    <app-loader />
   } @else {
     <div class="grid">
       <section class="panel styles-panel">
@@ -28,15 +28,45 @@
             <span class="meta">
               {{ style.kategori ?? '-' }} · {{ style.ukuran ?? '-' }} · Target {{ style.target_qty ?? '-' }} pcs
             </span>
-          </button>
-        }
-      </section>
+</button>
+}
+<button type="button" class="btn-ghost" (click)="showStyleForm.set(!showStyleForm())">
+{{ showStyleForm() ? 'Tutup' : '+ Style Baru' }}
+</button>
+@if (showStyleForm()) {
+<div class="form-grid">
+<label>
+  Kode
+  <input type="text" placeholder="cth: JMP-002" [value]="fStyleKode()" (input)="fStyleKode.set($any($event.target).value)" />
+</label>
+<label>
+  Nama Style
+  <input type="text" placeholder="cth: Crewneck Fleece" [value]="fStyleNama()" (input)="fStyleNama.set($any($event.target).value)" />
+</label>
+<label>
+  Kategori
+  <input type="text" placeholder="cth: Jaket" [value]="fStyleKategori()" (input)="fStyleKategori.set($any($event.target).value)" />
+</label>
+<label>
+  Ukuran
+  <input type="text" placeholder="cth: S,M,L,XL" [value]="fStyleUkuran()" (input)="fStyleUkuran.set($any($event.target).value)" />
+</label>
+<label>
+  Target Qty (pcs)
+  <input type="text" inputmode="decimal" placeholder="0" [value]="fStyleTarget()" (focus)="$any($event.target).select()" (input)="onKebutuhanInput($event); fStyleTarget.set($any($event.target).value)" />
+</label>
+<button type="button" class="btn-primary" (click)="addStyle()" [disabled]="!fStyleKode().trim() || !fStyleNama().trim() || savingStyle()">
+  Simpan Style
+</button>
+</div>
+}
+</section>
 
       <section class="panel bom-panel">
         @if (selectedStyle(); as style) {
           <h2>BOM — {{ style.kode }} {{ style.nama }}</h2>
           @if (selectedBom().length === 0) {
-            <p class="muted">Belum ada bahan di BOM style ini.</p>
+            <p class="muted">Belum ada bahan di BOM style ini. Tambahkan lewat form di bawah.</p>
           } @else {
             <div class="table-wrap">
               <table>
@@ -48,6 +78,7 @@
                     <th>Warna</th>
                     <th>Satuan</th>
                     <th>Kebutuhan / pcs</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -60,24 +91,108 @@
                       <td>{{ item.materials.satuan }}</td>
                       <td>
                         <input
-  type="text"
-  inputmode="decimal"
-  placeholder="0"
-  [value]="formatNum(item.kebutuhan_per_pcs)"
-  (focus)="$any($event.target).select()"
-  (input)="onKebutuhanInput($event)"
-  (change)="onKebutuhanChange(item, $event)"
-/>
+                          type="text"
+                          inputmode="decimal"
+                          placeholder="0"
+                          [value]="formatNum(item.kebutuhan_per_pcs)"
+                          (focus)="$any($event.target).select()"
+                          (input)="onKebutuhanInput($event)"
+                          (change)="onKebutuhanChange(item, $event)"
+                        />
+                      </td>
+                      <td>
+                        <button type="button" class="btn-danger" (click)="removeBomItem(item)" title="Hapus dari BOM">✕</button>
                       </td>
                     </tr>
                   }
                 </tbody>
               </table>
             </div>
-            <p class="hint">Isi kebutuhan per pcs lalu tekan Enter / klik di luar kolom untuk menyimpan.</p>
           }
-        }
-      </section>
+
+          <div class="add-row">
+            <select
+              [value]="newMaterialId()"
+              (change)="newMaterialId.set($any($event.target).value)"
+            >
+              <option value="">Pilih bahan…</option>
+              @for (m of availableMaterials(); track m.id) {
+                <option [value]="m.id">{{ m.kode }} — {{ m.nama }} ({{ m.satuan }})</option>
+              }
+            </select>
+            <input
+              type="text"
+              inputmode="decimal"
+              placeholder="Kebutuhan / pcs"
+              [value]="newKebutuhan()"
+              (focus)="$any($event.target).select()"
+              (input)="onKebutuhanInput($event); newKebutuhan.set($any($event.target).value)"
+            />
+            <button
+              type="button"
+              class="btn-primary"
+              (click)="addBomItem()"
+              [disabled]="!newMaterialId() || saving()"
+            >
+              Tambah
+            </button>
+          </div>
+          <p class="hint">Isi kebutuhan per pcs lalu tekan Enter / klik di luar kolom untuk menyimpan.</p>
+<button type="button" class="btn-ghost" (click)="toggleMaterialForm()">
+  {{ showMaterialForm() ? 'Tutup' : '+ Bahan Baru' }}
+</button>
+@if (showMaterialForm()) {
+  <div class="form-grid form-grid-2">
+    <label>
+      Kode
+      <input type="text" [value]="fMatKode()" (input)="fMatKode.set($any($event.target).value)" />
+    </label>
+    <label>
+      Nama Bahan
+      <input type="text" placeholder="cth: Kain Jersey Dry Fit" [value]="fMatNama()" (input)="fMatNama.set($any($event.target).value)" />
+    </label>
+    <label>
+      Jenis
+      <select [value]="fMatJenis()" (change)="fMatJenis.set($any($event.target).value)">
+        <option value="Kain">Kain</option>
+        <option value="Aksesoris">Aksesoris</option>
+        <option value="Lainnya">Lainnya</option>
+      </select>
+    </label>
+    <label>
+      Warna
+      <input type="text" placeholder="cth: Navy" [value]="fMatWarna()" (input)="fMatWarna.set($any($event.target).value)" />
+    </label>
+    <label>
+      Satuan
+      <select [value]="fMatSatuan()" (change)="fMatSatuan.set($any($event.target).value)">
+        <option value="meter">meter</option>
+        <option value="pcs">pcs</option>
+        <option value="kg">kg</option>
+        <option value="yard">yard</option>
+        <option value="roll">roll</option>
+      </select>
+    </label>
+    <label>
+      Klasifikasi
+      <select [value]="fMatKlasifikasi()" (change)="fMatKlasifikasi.set($any($event.target).value)">
+        <option value="Bahan Baku">Bahan Baku</option>
+        <option value="Bahan Penolong">Bahan Penolong</option>
+        <option value="Bahan Setengah Jadi">Bahan Setengah Jadi</option>
+        <option value="Barang Jadi">Barang Jadi</option>
+      </select>
+    </label>
+    <label>
+      Supplier
+      <input type="text" placeholder="cth: PT Tekstil Jaya" [value]="fMatSupplier()" (input)="fMatSupplier.set($any($event.target).value)" />
+    </label>
+    <button type="button" class="btn-primary" (click)="addMaterial()" [disabled]="!fMatKode().trim() || !fMatNama().trim() || savingMaterial()">
+      Simpan Bahan
+    </button>
+  </div>
+}
+}
+</section>
     </div>
   }
 </div>
