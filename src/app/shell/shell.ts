@@ -1,10 +1,11 @@
-import { AfterViewInit, Component, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { animate, stagger } from 'animejs';
 import { supabase } from '../supabase';
+import { CommandPalette } from '../command-palette/command-palette';
 
 @Component({
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommandPalette],
   selector: 'app-shell',
   styleUrl: './shell.scss',
   templateUrl: './shell.html',
@@ -16,6 +17,20 @@ export class Shell implements OnInit, AfterViewInit {
   sidebarOpen = signal(false);
   masterOpen = signal(true);
   opsOpen = signal(true);
+  paletteOpen = signal(false);
+
+  @HostListener('window:keydown', ['$event'])
+  onGlobalKeydown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      this.paletteOpen.update((v) => !v);
+    }
+  }
+
+  openPalette() {
+    this.closeSidebar();
+    this.paletteOpen.set(true);
+  }
 
   async ngOnInit() {
     const { data } = await supabase.auth.getSession();

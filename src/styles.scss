@@ -14,3 +14,134 @@ body {
   background: #0a1628;
   color: #f2f6fc;
 }
+
+/* ===== Mobile pass (≤860px, sama dengan breakpoint shell) ===== */
+@media (max-width: 860px) {
+  .main {
+    padding: 14px !important;
+  }
+
+  .page-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+
+    h1 {
+      font-size: 22px !important;
+    }
+
+    .btn-primary {
+      width: 100%;
+    }
+  }
+
+  .panel {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+    }
+  }
+
+  table {
+    min-width: 560px;
+    font-size: 12.5px !important;
+
+    th,
+    td {
+      padding: 8px 10px !important;
+    }
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea {
+    font-size: 16px !important;
+  }
+
+  .kpi-value {
+    font-size: 26px !important;
+  }
+
+  .chart-box {
+    height: 240px !important;
+  }
+
+  .progress-head {
+    flex-wrap: wrap;
+  }
+
+  .palette-backdrop {
+    padding-top: 8vh !important;
+  }
+
+  .palette-panel {
+    max-width: 100% !important;
+  }
+}
+
+/* Cegah layout melebar melebihi layar */
+html,
+body {
+  overflow-x: hidden;
+}
+
+.layout,
+.main-wrap,
+.main,
+.page,
+.panel {
+  min-width: 0;
+}
+
+/* Perbaikan mobile: kolom form & tabel tidak boleh memaksa halaman melebar */
+@media (max-width: 860px) {
+  .form-grid-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .form-grid-2 > *,
+  .form-grid label {
+    min-width: 0;
+  }
+
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea {
+    width: 100%;
+    min-width: 0;
+  }
+
+  table {
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 860px) {
+  .kpi-card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+  

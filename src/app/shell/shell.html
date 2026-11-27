@@ -15,6 +15,10 @@
         <span>PT Jumpwin Sports Indonesia</span>
       </div>
     </div>
+    <button type="button" class="search-trigger" (click)="openPalette()">
+      <span>Cari halaman…</span>
+      <kbd>Ctrl K</kbd>
+    </button>
 
     <nav>
       <a
@@ -124,6 +128,11 @@
     </header>
     <main class="main">
       <router-outlet />
+      <footer class="app-footer">© 2026 zeerp — All rights reserved by reziipn</footer>
     </main>
   </div>
+
+  @if (paletteOpen()) {
+    <app-command-palette (closed)="paletteOpen.set(false)" />
+  }
 </div>

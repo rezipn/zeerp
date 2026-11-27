@@ -1,0 +1,35 @@
+<div class="palette-backdrop" (click)="close()">
+  <div class="palette-panel" (click)="$event.stopPropagation()">
+    <input
+      #searchInput
+      type="text"
+      class="palette-input"
+      placeholder="Cari halaman… (cth: gudang, cutting, qc)"
+      [value]="query()"
+      (input)="onQuery($event)"
+    />
+    <div class="palette-list">
+      @if (filtered().length === 0) {
+        <p class="palette-empty">Tidak ada halaman yang cocok.</p>
+      } @else {
+        @for (item of filtered(); track item.route; let i = $index) {
+          <button
+            type="button"
+            class="palette-item"
+            [class.selected]="i === selectedIndex()"
+            (mouseenter)="selectedIndex.set(i)"
+            (click)="go(item)"
+          >
+            <span class="palette-label">{{ item.label }}</span>
+            <span class="palette-group">{{ item.group }}</span>
+          </button>
+        }
+      }
+    </div>
+    <div class="palette-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> pilih</span>
+      <span><kbd>Enter</kbd> buka</span>
+      <span><kbd>Esc</kbd> tutup</span>
+    </div>
+  </div>
+</div>
