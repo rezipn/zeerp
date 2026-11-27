@@ -17,7 +17,7 @@ Akun demo:
 
 | Email | Password |
 |---|---|
-| reziipn@gmail.com | ZeeRp240401! |
+| reziipn@gmail.com | rezipn123 | ZeeRp240401! |
 
 ## ✨ Fitur
 
